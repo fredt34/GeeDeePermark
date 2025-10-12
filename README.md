@@ -9,7 +9,7 @@ Provide a simple API to have images watermarked with a given text.
 ## Definition
 
 Accepts: 
-  - image - and pdf if possible
+  - image and pdf
   - text
   - text-size: 1, 2, 3, or 4
 

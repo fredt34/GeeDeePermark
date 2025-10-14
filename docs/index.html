@@ -40,7 +40,7 @@
         <li><strong>text_size</strong> (optional) — Integer 1..4 (default 3). Controls the font pixel size mapping used by the app.</li>
       </ul>
 
-      <h4>Responses (exact)</h4>
+      <h4>Responses</h4>
       <ul>
         <li>200 (image): returns a PNG stream with <code>Content-Type: image/png</code>. The app always writes images out as PNG after watermarking.</li>
         <li>200 (pdf input): returns a single-page PDF with the rasterized, watermarked page and <code>Content-Type: application/pdf</code>. Only the first PDF page is rasterised and returned as a single-page PDF.</li>
@@ -59,7 +59,7 @@
     </section>
 
     <section class="card">
-      <h2>Examples (exact curl matching app behaviour)</h2>
+      <h2>Examples</h2>
 
       <h4>Watermark an image and save the result as PNG</h4>
       <pre class="example">
@@ -119,7 +119,7 @@ HTTP/1.1 500 Internal Server Error
     </section>
 
     <section class="card">
-      <h2>Dependencies (exact)</h2>
+      <h2>Dependencies</h2>
       <pre class="example">
 fastapi
 uvicorn
@@ -133,7 +133,7 @@ python-multipart
     <section class="card">
       <h2>Files of interest in this repo</h2>
       <ul>
-        <li><code>app.py</code> — single-file FastAPI application (exact implementation used for the docs above).</li>
+        <li><code>app.py</code> — single-file FastAPI application.</li>
         <li><code>setup/geedeepermark.service</code> — example systemd unit used in production.</li>
         <li><code>setup/SETUP</code> — local install & deployment notes (Caddy config snippet included).</li>
         <li><code>README.md</code> — project README (concise project goals).</li>
@@ -146,7 +146,7 @@ python-multipart
       <ul>
         <li>Update <code>app.py</code> to match desired features and add tests.</li>
         <li>Adjust docs and include exact example responses and error codes.</li>
-        <li>Optionally add a requirements.txt, a small Dockerfile and an example Caddyfile for deployment.</li>
+        <li>Optionally add a requirements.txt and an example Caddyfile for deployment.</li>
       </ul>
     </section>
 
@@ -154,7 +154,7 @@ python-multipart
 
   <footer class="site-footer">
     <div class="wrap">
-      <p>© GeeDeePerMark — Privacy watermark service. Author: FredT34.</p>
+      <p>GeeDeePerMark — Privacy watermark service. Author: FredT34.</p>
     </div>
   </footer>
 </body>

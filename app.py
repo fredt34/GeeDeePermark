@@ -6,7 +6,7 @@ import fitz  # PyMuPDF
 
 DEFAULT_TEXT = "Confidential"
 DEFAULT_TEXT_SIZE = 3
-DEFAULT_TRADEMARK = "GeeDeePermark2"
+DEFAULT_TRADEMARK = "Created with GeeDeePermark - https://geedeepermark.cpvo.org/"
 DEFAULT_TRADEMARK_SIZE = 2
 
 app = FastAPI()
@@ -33,8 +33,10 @@ def draw_watermark(img: Image.Image, text: str, size: int) -> Image.Image:
     draw = ImageDraw.Draw(tile)
 
     try:
-        tw, th = draw.textbbox((0, 0), text, font=font)[2:]
-    except Exception:
+        bbox = draw.textbbox((0, 0), text, font=font)
+        tw = bbox[2] - bbox[0]
+        th = bbox[3] - bbox[1]
+    except AttributeError:
         tw, th = draw.textsize(text, font=font)
 
     step_x = int(tw * 1.15) # inter words
@@ -52,16 +54,22 @@ def draw_watermark(img: Image.Image, text: str, size: int) -> Image.Image:
 
     out = Image.alpha_composite(img, tile)
 
-    # Add trademark at bottom right
-    trademark_font = load_font(18)  # size 2 hardcoded
+    # Add trademark in bottom-right
+    trademark_font = load_font(12)  # size hardcoded to 12
     draw_out = ImageDraw.Draw(out)
+
+    # Get trademark text dimensions
     try:
-        tw_trademark, th_trademark = draw_out.textbbox((0, 0), DEFAULT_TRADEMARK, font=trademark_font)[2:]
-    except Exception:
+        bbox = draw_out.textbbox((0, 0), DEFAULT_TRADEMARK, font=trademark_font)
+        tw_trademark = bbox[2] - bbox[0]
+        th_trademark = bbox[3] - bbox[1]
+    except AttributeError:
         tw_trademark, th_trademark = draw_out.textsize(DEFAULT_TRADEMARK, font=trademark_font)
-    x_trademark = w - tw_trademark - 10
-    y_trademark = h - th_trademark - 10
-    draw_out.text((x_trademark, y_trademark), DEFAULT_TRADEMARK, font=trademark_font, fill=(255, 255, 255, 128))
+
+    # Add trademark at bottom right
+    x_bottom_right = max(0, w - tw_trademark - 10)
+    y_bottom_right = max(0, h - th_trademark - 10)
+    draw_out.text((x_bottom_right, y_bottom_right), DEFAULT_TRADEMARK, font=trademark_font, fill=(128,128,128,128))
 
     return out.convert("RGB")
 
@@ -94,7 +102,8 @@ async def watermark(
     try:
         out = draw_watermark(img, text, text_size)
     except Exception as e:
-        raise HTTPException(500, f"Watermark error: {e}")
+        import traceback
+        raise HTTPException(500, f"Watermark error: {e}\n{traceback.format_exc()}")
 
     buf = BytesIO()
     if file.content_type and "pdf" in file.content_type.lower():

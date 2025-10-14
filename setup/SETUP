@@ -12,5 +12,14 @@ install block in Caddyfile:
 
 geedeepermark.cpvo.org {
     import log
-    reverse_proxy 127.0.0.1:8000
+    root * /var/www/geedeepermark
+    @api {
+        path /watermark*
+    }
+    handle @api {
+        reverse_proxy 127.0.0.1:8000
+    }
+    handle {
+        file_server
+    }
 }

@@ -4,7 +4,7 @@ The privacy watermark.
 
 ## Goal
 
-Provide a simple API to have images watermarked with a given text - So People Don't Ever Have To Send Their Unprotected ID Documents.
+Provide a simple API to have images watermarked with a given text - So Your Apps Will Never Store Unprotected ID Documents Again.
 
 ## Definition
 

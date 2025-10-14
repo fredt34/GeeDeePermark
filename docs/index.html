@@ -9,7 +9,27 @@
 <body>
   <header class="site-header">
     <div class="wrap">
-      <h1>GeeDeePerMark</h1>
+      <h1 style="display:inline-block; margin:0;">GeeDeePerMark</h1>
+      <!-- GitHub button added near the top -->
+      <a class="github-button"
+         href="https://github.com/fredt34/GeeDeePermark"
+         target="_blank"
+         rel="noopener noreferrer"
+         aria-label="View GeeDeePermark on GitHub"
+         style="display:inline-block; vertical-align:middle; margin-left:1rem; text-decoration:none; color:inherit;">
+        <!-- Octocat SVG icon -->
+        <svg height="20" width="20" viewBox="0 0 16 16" version="1.1" aria-hidden="true" style="vertical-align:middle; fill:currentColor;">
+          <path fill-rule="evenodd"
+                d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38
+                   0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52
+                   -.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89
+                   -3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.01.08-2.11 0 0 .67-.21 2.2.82a7.62 7.62 0 012 0c1.53-1.04
+                   2.2-.82 2.2-.82.44 1.1.16 1.91.08 2.11.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54
+                   1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.013 8.013 0 0016 8c0-4.42-3.58-8-8-8z"/>
+        </svg>
+        <span style="margin-left:0.4rem; vertical-align:middle; font-size:0.95rem;">View on GitHub</span>
+      </a>
+
       <p class="tagline">The privacy watermark — watermark images & PDFs in-memory so originals do not need to be shared.</p>
     </div>
   </header>
@@ -17,7 +37,7 @@
   <main class="wrap">
     <section class="card">
       <h2>What this project does</h2>
-      <p>GeeDeePerMark is a tiny FastAPI-based service that applies a visible text watermark to images and PDFs entirely in memory. It is designed to be compact and easy to host so organisations can avoid asking users to share unprotected identity documents.</p>
+      <p>GeeDeePerMark is a tiny FastAPI-based service that applies a visible text watermark to images and PDFs entirely in memory. It is designed to be compact and easy to host so organisations can install and run a document-protecting API without hassle.
 
       <ul>
         <li>Accepts: images (JPEG, PNG, etc.) and PDF files.</li>
@@ -43,8 +63,8 @@
       <h4>Responses</h4>
       <ul>
         <li>200 (image): returns a PNG stream with <code>Content-Type: image/png</code>. The app always writes images out as PNG after watermarking.</li>
-        <li>200 (pdf input): returns a single-page PDF with the rasterized, watermarked page and <code>Content-Type: application/pdf</code>. Only the first PDF page is rasterised and returned as a single-page PDF.</li>
-        <li>400 Bad Request: several error paths use HTTPException(400, "...") with messages the app raises, e.g. <code>"Unsupported file. Provide an image or a PDF."</code> or <code>"Empty PDF"</code>.</li>
+        <li>200 (pdf input): returns a single-page PDF with the rasterized, watermarked page and <code>Content-Type: application/pdf</code>. Only the first PDF page is rasterised and returned as a sin[...]</li>
+        <li>400 Bad Request: several error paths use HTTPException(400, "...") with messages the app raises, e.g. <code>"Unsupported file. Provide an image or a PDF."</code> or <code>"Empty PDF"</code[...]</li>
         <li>500 Internal Server Error: if watermark drawing fails the app raises <code>HTTPException(500, f"Watermark error: {e}")</code>.</li>
       </ul>
 
@@ -142,7 +162,7 @@ python-multipart
 
     <section class="card">
       <h2>Contributing & next steps</h2>
-      <p>If you want changes to behaviour or documentation scope (multi-page PDFs, configurable DPI, opacity/position options, additional endpoints, or formal API versioning), tell me which file(s) to change and I will:</p>
+      <p>If you want changes to behaviour or documentation scope (multi-page PDFs, configurable DPI, opacity/position options, additional endpoints, or formal API versioning), tell me which file(s) to[...] 
       <ul>
         <li>Update <code>app.py</code> to match desired features and add tests.</li>
         <li>Adjust docs and include exact example responses and error codes.</li>
@@ -153,8 +173,26 @@ python-multipart
   </main>
 
   <footer class="site-footer">
-    <div class="wrap">
-      <p>GeeDeePerMark — Privacy watermark service. Author: FredT34.</p>
+    <div class="wrap" style="display:flex; align-items:center; justify-content:space-between; gap:1rem;">
+      <p style="margin:0;">GeeDeePerMark — Privacy watermark service. Author: FredT34.</p>
+
+      <!-- Footer GitHub link -->
+      <a href="https://github.com/fredt34/GeeDeePermark"
+         target="_blank"
+         rel="noopener noreferrer"
+         aria-label="GeeDeePermark repository on GitHub"
+         style="display:inline-flex; align-items:center; gap:0.5rem; text-decoration:none; color:inherit; font-size:0.95rem;">
+        <svg height="18" width="18" viewBox="0 0 16 16" version="1.1" aria-hidden="true" style="fill:currentColor;">
+          <path fill-rule="evenodd"
+                d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38
+                   0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52
+                   -.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89
+                   -3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.01.08-2.11 0 0 .67-.21 2.2.82a7.62 7.62 0 012 0c1.53-1.04
+                   2.2-.82 2.2-.82.44 1.1.16 1.91.08 2.11.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54
+                   1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.013 8.013 0 0016 8c0-4.42-3.58-8-8-8z"/>
+        </svg>
+        <span>Repository on GitHub</span>
+      </a>
     </div>
   </footer>
 </body>

@@ -26,7 +26,7 @@ All process runs in memory - no image is ever stored
 
 ## Language
 
-Python. Has lots of libraries, secure and easy to insttall & read.
+Python. Has lots of libraries, secure and easy to install & read. Shamelessly vibe-coded with VSCode, Cline and free Grok-AI.
 
 Program should be as short as possible - ideally, only 1 single file, in order to be extremely easy to install and run.
 

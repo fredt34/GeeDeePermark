@@ -1,0 +1,16 @@
+sudo apt install python3.10-venv
+python3 -m venv venv
+sudo chown -R caddy:caddy venv
+sudo -u caddy ./venv/bin/pip install fastapi uvicorn pillow pymupdf python-multipart
+
+install geedeepermark.service in /etc/systemd/system/geedeepermark.service
+sudo systemctl daemon-reload
+sudo systemctl enable geedeepermark.service
+sudo systemctl start geedeepermark.service
+
+install block in Caddyfile:
+
+geedeepermark.cpvo.org {
+    import log
+    reverse_proxy 127.0.0.1:8000
+}

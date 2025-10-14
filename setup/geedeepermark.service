@@ -1,0 +1,17 @@
+# sudo systemctl daemon-reload
+# sudo systemctl start geedeepermark
+[Unit]
+Description=GeeDeePerMark FastAPI Service
+After=network.target
+
+[Service]
+User=caddy
+Group=caddy
+WorkingDirectory=/var/www/geedeepermark
+ExecStart=/var/www/geedeepermark/venv/bin/uvicorn app:app --host 127.0.0.1 --port 8000
+Restart=always
+RestartSec=5
+Environment="PYTHONUNBUFFERED=1"
+
+[Install]
+WantedBy=multi-user.target

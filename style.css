@@ -1,0 +1,45 @@
+/* GeeDeePerMark documentation styling — neutral, readable */
+
+:root{
+  --bg: #f8fafc;
+  --card: #ffffff;
+  --muted: #586069;
+  --accent: #0b63d6;
+  --text: #0b1220;
+  --mono: ui-monospace, SFMono-Regular, Menlo, Monaco, "Roboto Mono", "Courier New", monospace;
+  --max-width: 960px;
+  --radius: 10px;
+}
+
+*{box-sizing:border-box}
+html,body{height:100%; margin:0; font-family: Inter, system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial; color:var(--text); background:linear-gradient(180deg,#fbfdff,#eef6ff); -webkit-font-smoothing:antialiased}
+.wrap{max-width:var(--max-width); margin:0 auto; padding:28px}
+
+/* Header */
+.site-header{padding:16px 0}
+.site-header h1{margin:0; font-size:1.5rem; letter-spacing:-0.3px}
+.tagline{margin:6px 0 0; color:var(--muted); font-size:0.95rem}
+
+/* Cards */
+.card{background:var(--card); border:1px solid rgba(11,18,32,0.04); padding:18px; margin:16px 0; border-radius:var(--radius); box-shadow: 0 6px 18px rgba(11,18,32,0.04)}
+.card h2{margin-top:0; color:var(--accent)}
+.card p, .card li{color:var(--muted); line-height:1.6}
+
+/* Code & examples */
+.example{background:#0b1220; color:#e6eef6; padding:12px; border-radius:8px; font-family:var(--mono); font-size:0.92rem; overflow:auto}
+code{background:#f1f5f9; padding:2px 6px; border-radius:6px; font-family:var(--mono); color:var(--text)}
+
+/* Tables */
+.error-table{width:100%; border-collapse:collapse; margin-top:12px}
+.error-table thead th{ text-align:left; padding:8px 10px; color:var(--accent) }
+.error-table tbody td{ padding:10px 10px; border-top:1px solid rgba(11,18,32,0.04); color:var(--muted) }
+
+/* Footer */
+.site-footer{padding:18px 0; color:var(--muted); font-size:0.9rem; text-align:center; border-top:1px solid rgba(11,18,32,0.03); margin-top:32px}
+
+/* Responsive */
+@media (max-width:700px){
+  .wrap{padding:16px}
+  .site-header h1{font-size:1.2rem}
+  .card{padding:14px}
+}

@@ -49,7 +49,7 @@
     </section>
 
     <section class="card">
-      <h2>API reference — exact behaviour (app.py)</h2>
+      <h2>API reference (app.py)</h2>
       <h3>POST /watermark</h3>
       <p>Multipart form upload. The service reads the uploaded file into memory, converts PDFs to a raster (first page only), draws a tiled rotated watermark and returns a watermarked file.</p>
 
@@ -63,12 +63,12 @@
       <h4>Responses</h4>
       <ul>
         <li>200 (image): returns a PNG stream with <code>Content-Type: image/png</code>. The app always writes images out as PNG after watermarking.</li>
-        <li>200 (pdf input): returns a single-page PDF with the rasterized, watermarked page and <code>Content-Type: application/pdf</code>. Only the first PDF page is rasterised and returned as a sin[...]</li>
-        <li>400 Bad Request: several error paths use HTTPException(400, "...") with messages the app raises, e.g. <code>"Unsupported file. Provide an image or a PDF."</code> or <code>"Empty PDF"</code[...]</li>
+        <li>200 (pdf input): returns a single-page PDF with the rasterized, watermarked page and <code>Content-Type: application/pdf</code>. Only the first PDF page is rasterised and returned as a single PDF.</li>
+        <li>400 Bad Request: several error paths use HTTPException(400, "...") with messages the app raises, e.g. <code>"Unsupported file. Provide an image or a PDF."</code> or <code>"Empty PDF"</code></li>
         <li>500 Internal Server Error: if watermark drawing fails the app raises <code>HTTPException(500, f"Watermark error: {e}")</code>.</li>
       </ul>
 
-      <h4>Exact behaviours & implementation notes</h4>
+      <h4>Implementation notes</h4>
       <ul>
         <li>The app uses Pillow (PIL) to draw a tiled, rotated watermark onto an RGBA image, then compositing and returning RGB/PNG.</li>
         <li>Font loading: attempts common system fonts (DejaVuSans, Arial); falls back to Pillow default font if none found.</li>
@@ -162,7 +162,6 @@ python-multipart
 
     <section class="card">
       <h2>Contributing & next steps</h2>
-      <p>If you want changes to behaviour or documentation scope (multi-page PDFs, configurable DPI, opacity/position options, additional endpoints, or formal API versioning), tell me which file(s) to[...] 
       <ul>
         <li>Update <code>app.py</code> to match desired features and add tests.</li>
         <li>Adjust docs and include exact example responses and error codes.</li>

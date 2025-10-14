@@ -1,0 +1,161 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>GeeDeePerMark — The Privacy Watermark (Docs)</title>
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <header class="site-header">
+    <div class="wrap">
+      <h1>GeeDeePerMark</h1>
+      <p class="tagline">The privacy watermark — watermark images & PDFs in-memory so originals do not need to be shared.</p>
+    </div>
+  </header>
+
+  <main class="wrap">
+    <section class="card">
+      <h2>What this project does</h2>
+      <p>GeeDeePerMark is a tiny FastAPI-based service that applies a visible text watermark to images and PDFs entirely in memory. It is designed to be compact and easy to host so organisations can avoid asking users to share unprotected identity documents.</p>
+
+      <ul>
+        <li>Accepts: images (JPEG, PNG, etc.) and PDF files.</li>
+        <li>Default watermark text: <code>Confidential</code>.</li>
+        <li>Text size: allowed values 1, 2, 3, 4 (default 3).</li>
+        <li>Processing: in-memory only — no file is persisted to disk by the app.</li>
+        <li>Implementation: single-file FastAPI app (app.py) using Pillow and PyMuPDF (fitz).</li>
+      </ul>
+    </section>
+
+    <section class="card">
+      <h2>API reference — exact behaviour (app.py)</h2>
+      <h3>POST /watermark</h3>
+      <p>Multipart form upload. The service reads the uploaded file into memory, converts PDFs to a raster (first page only), draws a tiled rotated watermark and returns a watermarked file.</p>
+
+      <h4>Form fields</h4>
+      <ul>
+        <li><strong>file</strong> (required) — Upload file. Accepts image/* (PNG, JPEG...) or application/pdf.</li>
+        <li><strong>text</strong> (optional) — Watermark text. Default: <code>Confidential</code>.</li>
+        <li><strong>text_size</strong> (optional) — Integer 1..4 (default 3). Controls the font pixel size mapping used by the app.</li>
+      </ul>
+
+      <h4>Responses (exact)</h4>
+      <ul>
+        <li>200 (image): returns a PNG stream with <code>Content-Type: image/png</code>. The app always writes images out as PNG after watermarking.</li>
+        <li>200 (pdf input): returns a single-page PDF with the rasterized, watermarked page and <code>Content-Type: application/pdf</code>. Only the first PDF page is rasterised and returned as a single-page PDF.</li>
+        <li>400 Bad Request: several error paths use HTTPException(400, "...") with messages the app raises, e.g. <code>"Unsupported file. Provide an image or a PDF."</code> or <code>"Empty PDF"</code>.</li>
+        <li>500 Internal Server Error: if watermark drawing fails the app raises <code>HTTPException(500, f"Watermark error: {e}")</code>.</li>
+      </ul>
+
+      <h4>Exact behaviours & implementation notes</h4>
+      <ul>
+        <li>The app uses Pillow (PIL) to draw a tiled, rotated watermark onto an RGBA image, then compositing and returning RGB/PNG.</li>
+        <li>Font loading: attempts common system fonts (DejaVuSans, Arial); falls back to Pillow default font if none found.</li>
+        <li>PDF handling: uses PyMuPDF (fitz) to render the first page at 144 DPI into an RGB image, then watermarking is applied.</li>
+        <li>Trademark: a faint "GeeDeePermark2" trademark text is drawn at the bottom-right of the output.</li>
+        <li>All processing is done in-memory via BytesIO; the app does not write files to disk.</li>
+      </ul>
+    </section>
+
+    <section class="card">
+      <h2>Examples (exact curl matching app behaviour)</h2>
+
+      <h4>Watermark an image and save the result as PNG</h4>
+      <pre class="example">
+curl -s -X POST "http://127.0.0.1:8000/watermark" \
+  -F "file=@/path/to/id.jpg" \
+  -F "text=Confidential" \
+  -F "text_size=3" \
+  --output watermarked.png
+      </pre>
+
+      <h4>Watermark a PDF (first page only) and save the re-embedded single-page PDF</h4>
+      <pre class="example">
+curl -s -X POST "http://127.0.0.1:8000/watermark" \
+  -F "file=@/path/to/document.pdf" \
+  -F "text=For Audit Only" \
+  --output watermarked.pdf
+      </pre>
+
+      <h4>Example error responses (literal strings used by app)</h4>
+      <pre class="example">
+HTTP/1.1 400 Bad Request
+Content-Type: application/json
+
+{ "detail": "Unsupported file. Provide an image or a PDF." }
+
+-- or --
+
+HTTP/1.1 400 Bad Request
+{ "detail": "Empty PDF" }
+
+-- or --
+
+HTTP/1.1 500 Internal Server Error
+{ "detail": "Watermark error: <exception message>" }
+      </pre>
+    </section>
+
+    <section class="card">
+      <h2>Operational notes & limits</h2>
+      <ul>
+        <li>Memory usage: the whole uploaded file and its raster are kept in memory. Set appropriate upload size limits in the reverse proxy (Caddy/nginx) and consider process memory limits.</li>
+        <li>PDF pages: only the first page is processed. If you need multi-page PDF support, we can extend the code to loop pages and reassemble PDF.</li>
+        <li>Image formats: the app uses Pillow's autodetection; some exotic formats may fail.</li>
+        <li>Uploads size: configure uvicorn/proxy body size limits to prevent OOM or DoS.</li>
+        <li>Run as unprivileged user: the provided systemd service runs as <code>caddy</code> and the venv is chowned to that user in setup scripts.</li>
+      </ul>
+    </section>
+
+    <section class="card">
+      <h2>Security & privacy</h2>
+      <ul>
+        <li>Processing is ephemeral and in-memory — the repo explicitly states "no image is ever stored".</li>
+        <li>Use TLS (reverse proxy) and restrict access to the service. Do not expose the raw uvicorn port publicly.</li>
+        <li>Do not log file contents. The code currently does not persist images; ensure any added logging remains metadata-only.</li>
+        <li>Limit request rates and sizes to mitigate abuse.</li>
+      </ul>
+    </section>
+
+    <section class="card">
+      <h2>Dependencies (exact)</h2>
+      <pre class="example">
+fastapi
+uvicorn
+pillow
+pymupdf
+python-multipart
+      </pre>
+      <p>Install example (as deploy user): <code>./venv/bin/pip install fastapi uvicorn pillow pymupdf python-multipart</code></p>
+    </section>
+
+    <section class="card">
+      <h2>Files of interest in this repo</h2>
+      <ul>
+        <li><code>app.py</code> — single-file FastAPI application (exact implementation used for the docs above).</li>
+        <li><code>setup/geedeepermark.service</code> — example systemd unit used in production.</li>
+        <li><code>setup/SETUP</code> — local install & deployment notes (Caddy config snippet included).</li>
+        <li><code>README.md</code> — project README (concise project goals).</li>
+      </ul>
+    </section>
+
+    <section class="card">
+      <h2>Contributing & next steps</h2>
+      <p>If you want changes to behaviour or documentation scope (multi-page PDFs, configurable DPI, opacity/position options, additional endpoints, or formal API versioning), tell me which file(s) to change and I will:</p>
+      <ul>
+        <li>Update <code>app.py</code> to match desired features and add tests.</li>
+        <li>Adjust docs and include exact example responses and error codes.</li>
+        <li>Optionally add a requirements.txt, a small Dockerfile and an example Caddyfile for deployment.</li>
+      </ul>
+    </section>
+
+  </main>
+
+  <footer class="site-footer">
+    <div class="wrap">
+      <p>© GeeDeePerMark — Privacy watermark service. Author: FredT34.</p>
+    </div>
+  </footer>
+</body>
+</html>

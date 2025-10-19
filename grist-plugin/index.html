@@ -1,0 +1,501 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <title>GeeDeePermark</title>
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <link rel="stylesheet" href="style.css">
+  <script src="https://docs.getgrist.com/grist-plugin-api.js"></script>
+</head>
+<body>
+  <main class="wrapper">
+    <h1>GeeDeePermark</h1>
+    
+    <div id="spinner" class="spinner" style="display:none;">
+      <div class="spinner-circle"></div>
+      <p id="spinner-text">Processing...</p>
+    </div>
+    
+    <div class="controls">
+      <label for="watermark-text" id="watermark-text-label">Watermark text:</label>
+      <input type="text" id="watermark-text" value="Confidential" placeholder="Enter watermark text">
+      <div id="watermark-text-readonly" class="readonly-value" style="display:none;"></div>
+      
+      <label for="watermark-size" id="watermark-size-label">Watermark size:</label>
+      <select id="watermark-size">
+        <option value="1">Small (1)</option>
+        <option value="2">Medium (2)</option>
+        <option value="3" selected>Large (3)</option>
+        <option value="4">Extra Large (4)</option>
+      </select>
+      <div id="watermark-size-readonly" class="readonly-value" style="display:none;"></div>
+      
+      <label id="auto-process-label" style="display:none;">
+        <input type="checkbox" id="auto-process" checked>
+        Auto-process current row on change
+      </label>
+      
+      <label id="force-reprocess-label" style="display:none;">
+        <input type="checkbox" id="force-reprocess">
+        Force reprocess even if already watermarked
+      </label>
+    </div>
+    </div>
+    
+    <button id="action" type="button" disabled style="display:none;">Apply watermark now</button>
+    <div class="log-controls" style="display:none;">
+      <button id="clear-log" type="button" class="secondary small">Clear log</button>
+      <button id="reset-state" type="button" class="secondary small">Reset state (debug)</button>
+    </div>
+    <pre id="log" aria-live="polite" style="display:none;"></pre>
+  </main>
+  <script>
+    let API_URL = "https://geedeepermark.cpvo.org/watermark";
+    const columnSpec = [
+      {name: "Source", title: "Source attachments", type: "Attachments"},
+      {name: "Dest", title: "Watermarked output", type: "Attachments"}
+    ];
+
+    const state = {
+      record: null,
+      mappings: null,
+      busy: false,
+      table: null,
+      tableId: null,
+      lastSourceIdsByRow: new Map(), // Map row ID -> source IDs string
+      processedMap: new Map(), // Map source ID -> dest ID
+      config: null // Configuration from Config table
+    };
+
+    const actionBtn = document.getElementById("action");
+    const logEl = document.getElementById("log");
+    const spinnerEl = document.getElementById("spinner");
+    const spinnerTextEl = document.getElementById("spinner-text");
+    const watermarkTextInput = document.getElementById("watermark-text");
+    const watermarkTextLabel = document.getElementById("watermark-text-label");
+    const watermarkTextReadonly = document.getElementById("watermark-text-readonly");
+    const watermarkSizeSelect = document.getElementById("watermark-size");
+    const watermarkSizeLabel = document.getElementById("watermark-size-label");
+    const watermarkSizeReadonly = document.getElementById("watermark-size-readonly");
+    const autoProcessCheckbox = document.getElementById("auto-process");
+    const autoProcessLabel = document.getElementById("auto-process-label");
+    const forceReprocessCheckbox = document.getElementById("force-reprocess");
+    const forceReprocessLabel = document.getElementById("force-reprocess-label");
+    const clearLogBtn = document.getElementById("clear-log");
+    const resetStateBtn = document.getElementById("reset-state");
+    const logControls = document.querySelector(".log-controls");
+
+    actionBtn.addEventListener("click", () => processCurrentRow().catch(logError));
+    
+    clearLogBtn.addEventListener("click", () => {
+      logEl.textContent = "";
+      logMessage("✓ Log cleared");
+    });
+    
+    resetStateBtn.addEventListener("click", () => {
+      state.lastSourceIdsByRow.clear();
+      logMessage("✓ State reset - all rows will be reprocessed on next change");
+      logMessage(`🔍 DEBUG: lastSourceIdsByRow cleared (had ${state.lastSourceIdsByRow.size} entries)`);
+    });
+
+    // Save settings to localStorage
+    watermarkTextInput.addEventListener("input", () => {
+      localStorage.setItem("geedeepermark.text", watermarkTextInput.value);
+    });
+    watermarkSizeSelect.addEventListener("change", () => {
+      localStorage.setItem("geedeepermark.size", watermarkSizeSelect.value);
+    });
+    autoProcessCheckbox.addEventListener("change", () => {
+      localStorage.setItem("geedeepermark.auto", autoProcessCheckbox.checked ? "1" : "0");
+    });
+    forceReprocessCheckbox.addEventListener("change", () => {
+      localStorage.setItem("geedeepermark.force", forceReprocessCheckbox.checked ? "1" : "0");
+    });
+
+    // Restore settings from localStorage
+    const savedText = localStorage.getItem("geedeepermark.text");
+    const savedSize = localStorage.getItem("geedeepermark.size");
+    const savedAuto = localStorage.getItem("geedeepermark.auto");
+    const savedForce = localStorage.getItem("geedeepermark.force");
+    if (savedText !== null) watermarkTextInput.value = savedText;
+    if (savedSize !== null) watermarkSizeSelect.value = savedSize;
+    if (savedAuto !== null) autoProcessCheckbox.checked = savedAuto === "1";
+    if (savedForce !== null) forceReprocessCheckbox.checked = savedForce === "1";
+
+    grist.ready({columns: columnSpec, requiredAccess: "full"});
+    
+    // Load configuration from Config table
+    async function loadConfig() {
+      try {
+        const configTable = await grist.docApi.fetchTable("Config");
+        if (configTable && configTable.Param && configTable.Value) {
+          state.config = {};
+          for (let i = 0; i < configTable.Param.length; i++) {
+            const param = configTable.Param[i];
+            const value = configTable.Value[i];
+            if (param === "WatermarkText") {
+              state.config.text = value || "Confidential";
+            } else if (param === "WatermarkSize") {
+              state.config.size = parseInt(value) || 3;
+            } else if (param === "Watermark_API_URL") {
+              state.config.apiUrl = value || API_URL;
+              API_URL = state.config.apiUrl;
+            } else if (param === "WatermarkAllowReprocess") {
+              // Parse Y/N, y/n, 0/1, o/n, O/N
+              const normalized = value.toString().toLowerCase().trim();
+              state.config.allowReprocess = ["y", "yes", "1", "o", "oui"].includes(normalized);
+            } else if (param === "WatermarkAutoProcessRow") {
+              // Hidden parameter - only show checkbox if explicitly set to No
+              const normalized = value.toString().toLowerCase().trim();
+              state.config.autoProcessRow = !["n", "no", "0", "non"].includes(normalized);
+            } else if (param === "WatermarkDebug") {
+              // Debug mode: show manual button and logs
+              const normalized = value.toString().toLowerCase().trim();
+              state.config.debugMode = ["1", "y", "yes", "true", "o", "oui"].includes(normalized);
+            }
+          }
+          
+          // Handle WatermarkDebug visibility
+          if (state.config.debugMode === true) {
+            actionBtn.style.display = "block";
+            logControls.style.display = "flex";
+            logEl.style.display = "block";
+          } else {
+            // Default: hide debug elements
+            actionBtn.style.display = "none";
+            logControls.style.display = "none";
+            logEl.style.display = "none";
+          }
+          
+          // Handle WatermarkAllowReprocess checkbox visibility
+          if (state.config.allowReprocess === true) {
+            forceReprocessLabel.style.display = "flex";
+          } else {
+            // Default or No: hide the checkbox
+            forceReprocessLabel.style.display = "none";
+            forceReprocessCheckbox.checked = false;
+          }
+          
+          // Handle WatermarkAutoProcessRow checkbox visibility
+          if (state.config.autoProcessRow === false) {
+            // Only show if explicitly set to No
+            autoProcessLabel.style.display = "flex";
+          } else {
+            // Default or Yes: always enable, hide checkbox
+            autoProcessCheckbox.checked = true;
+            autoProcessLabel.style.display = "none";
+          }
+          
+          // If config exists, switch to readonly mode
+          if (state.config.text || state.config.size) {
+            // Hide inputs, show readonly values
+            watermarkTextInput.style.display = "none";
+            watermarkSizeSelect.style.display = "none";
+            
+            watermarkTextReadonly.textContent = state.config.text || "Confidential";
+            watermarkTextReadonly.style.display = "block";
+            watermarkTextLabel.textContent = "Watermark text (from config):";
+            
+            const sizeNames = {1: "Small", 2: "Medium", 3: "Large", 4: "Extra Large"};
+            watermarkSizeReadonly.textContent = `${sizeNames[state.config.size] || "Large"} (${state.config.size || 3})`;
+            watermarkSizeReadonly.style.display = "block";
+            watermarkSizeLabel.textContent = "Watermark size (from config):";
+            
+            // Set values for API calls
+            watermarkTextInput.value = state.config.text;
+            watermarkSizeSelect.value = state.config.size.toString();
+          } else {
+            // No config, use editable inputs (restore from localStorage)
+            watermarkTextInput.style.display = "block";
+            watermarkSizeSelect.style.display = "block";
+            watermarkTextReadonly.style.display = "none";
+            watermarkSizeReadonly.style.display = "none";
+          }
+          
+          logMessage(`✓ Config loaded: "${state.config.text || 'Confidential'}", size ${state.config.size || 3}`);
+          if (state.config.apiUrl) {
+            logMessage(`✓ API URL: ${state.config.apiUrl}`);
+          }
+        }
+      } catch (err) {
+        // Config table doesn't exist or error, use defaults
+        console.log("Config table not found or error, using defaults:", err);
+        logMessage("ℹ Using default watermark settings (no Config table found)");
+      }
+    }
+    
+    // Load config on startup
+    loadConfig();
+
+    grist.onRecord((record, mappings) => {
+      state.record = record;
+      state.mappings = mappings;
+      renderState();
+      checkAutoProcess();
+    });
+
+    function renderState() {
+      if (!state.mappings || !state.mappings.Source || !state.mappings.Dest) {
+        actionBtn.disabled = true;
+        return;
+      }
+
+      if (!state.record) {
+        actionBtn.disabled = true;
+        return;
+      }
+
+      if (state.record.id === "new") {
+        actionBtn.disabled = true;
+        return;
+      }
+
+      const mapped = grist.mapColumnNames(state.record, {columns: columnSpec, mappings: state.mappings});
+      if (!mapped) {
+        actionBtn.disabled = true;
+        return;
+      }
+
+      const sourceCount = Array.isArray(mapped.Source) ? mapped.Source.length : 0;
+      actionBtn.disabled = state.busy || sourceCount === 0;
+      if (!state.busy) {
+        actionBtn.textContent = "Apply watermark now";
+      }
+    }
+
+    function checkAutoProcess() {
+      if (!autoProcessCheckbox.checked || state.busy || !state.record || state.record.id === "new") {
+        return;
+      }
+      if (!state.mappings || !state.mappings.Source || !state.mappings.Dest) {
+        return;
+      }
+
+      const mapped = grist.mapColumnNames(state.record, {columns: columnSpec, mappings: state.mappings});
+      if (!mapped) {
+        return;
+      }
+
+      const sources = Array.isArray(mapped.Source) ? mapped.Source : [];
+      const dests = Array.isArray(mapped.Dest) ? mapped.Dest : [];
+      const currentSourceIds = sources.map(s => (typeof s === "object" && s ? s.id : s)).filter(Boolean).sort().join(",");
+      
+      // Get last source IDs for THIS specific row
+      const rowId = state.record.id;
+      const lastSourceIds = state.lastSourceIdsByRow.get(rowId) || null;
+
+      // Check if already processed: same number of files and sources haven't changed
+      if (!forceReprocessCheckbox.checked && sources.length > 0 && sources.length === dests.length && lastSourceIds === currentSourceIds) {
+        return; // Already processed, skip
+      }
+
+      // Check if source has changed FOR THIS ROW
+      if (lastSourceIds !== currentSourceIds) {
+        state.lastSourceIdsByRow.set(rowId, currentSourceIds);
+        if (sources.length > 0) {
+          logMessage(`✓ Processing row ${rowId} (${sources.length} file${sources.length === 1 ? "" : "s"})...`);
+          processCurrentRow().catch(logError);
+        } else {
+          clearDestColumn().catch(logError);
+        }
+      }
+    }
+
+    async function clearDestColumn() {
+      if (state.busy || !state.record || state.record.id === "new") {
+        return;
+      }
+      setBusy(true);
+      try {
+        const payload = grist.mapColumnNamesBack({Dest: ['L']}, {columns: columnSpec, mappings: state.mappings});
+        if (!payload) {
+          throw new Error("Could not map Dest column back to table schema.");
+        }
+        await ensureTable();
+        await grist.docApi.applyUserActions([["UpdateRecord", state.tableId, state.record.id, payload]]);
+        logMessage(`✓ Cleared Dest column (row ${state.record.id}).`);
+      } finally {
+        setBusy(false);
+        renderState();
+      }
+    }
+
+    function setBusy(nextBusy, message = "Processing...") {
+      state.busy = nextBusy;
+      actionBtn.disabled = nextBusy || actionBtn.disabled;
+      actionBtn.textContent = nextBusy ? "Processing..." : "Apply watermark now";
+      
+      if (nextBusy) {
+        spinnerTextEl.textContent = message;
+        spinnerEl.style.display = "block";
+      } else {
+        spinnerEl.style.display = "none";
+      }
+    }
+
+    function logMessage(message) {
+      const stamp = new Date().toLocaleTimeString();
+      logEl.textContent = `[${stamp}] ${message}\n${logEl.textContent}`;
+    }
+
+    function logError(error) {
+      const message = error instanceof Error ? error.message : String(error);
+      logMessage(`Error: ${message}`);
+      console.error(error);
+    }
+
+    function buildOutputName(originalName, contentType) {
+      const dot = originalName.lastIndexOf(".");
+      const root = dot > -1 ? originalName.slice(0, dot) : originalName;
+      let ext = dot > -1 ? originalName.slice(dot + 1) : "";
+      if (contentType.includes("pdf")) {
+        ext = "pdf";
+      } else if (contentType.includes("png")) {
+        ext = "png";
+      } else if (!ext) {
+        ext = "bin";
+      }
+      return `${root}-watermarked.${ext}`;
+    }
+
+    async function ensureTable() {
+      if (!state.table) {
+        state.table = grist.getTable();
+      }
+      if (!state.tableId) {
+        state.tableId = await state.table.getTableId();
+      }
+      return state.table;
+    }
+
+    async function processCurrentRow() {
+      if (!state.record || state.record.id === "new" || state.busy) {
+        return;
+      }
+      if (!state.mappings || !state.mappings.Source || !state.mappings.Dest) {
+        logMessage("Map Source and Dest columns in widget options first.");
+        return;
+      }
+
+      const mapped = grist.mapColumnNames(state.record, {columns: columnSpec, mappings: state.mappings});
+      if (!mapped) {
+        logMessage("Column mapping is incomplete.");
+        return;
+      }
+
+      const sources = Array.isArray(mapped.Source) ? mapped.Source : [];
+      const dests = Array.isArray(mapped.Dest) ? mapped.Dest : [];
+      
+      if (sources.length === 0) {
+        logMessage("No attachments in Source column.");
+        return;
+      }
+
+      // Get existing dest IDs
+      const existingDestIds = dests.map(d => (typeof d === "object" && d ? d.id : d)).filter(Boolean);
+      
+      // Find NEW sources that don't have corresponding dest yet
+      // We match by position: source[i] should have dest[i]
+      const newSources = [];
+      for (let i = 0; i < sources.length; i++) {
+        if (i >= dests.length || !dests[i]) {
+          // No dest for this source position, it's new
+          newSources.push(sources[i]);
+        }
+      }
+      
+      if (newSources.length === 0) {
+        logMessage("No new files to process (all sources already have destinations).");
+        return;
+      }
+
+      setBusy(true, `Processing ${newSources.length} file${newSources.length === 1 ? "" : "s"}...`);
+
+      try {
+        const token = await grist.docApi.getAccessToken({readOnly: false});
+        const newDestIds = [];
+
+        // Process ONLY new sources
+        for (const entry of newSources) {
+          const attachment = await downloadAttachment(entry, token);
+          const processed = await callWatermark(attachment);
+          const uploadedId = await uploadAttachment(processed, token);
+          newDestIds.push(uploadedId);
+        }
+
+        // Combine existing dests + new dests
+        const allDestIds = [...existingDestIds, ...newDestIds];
+        const gristAttachmentList = ['L', ...allDestIds];
+        const payload = grist.mapColumnNamesBack({Dest: gristAttachmentList}, {columns: columnSpec, mappings: state.mappings});
+        if (!payload) {
+          throw new Error("Could not map Dest column back to table schema.");
+        }
+
+        await ensureTable();
+        await grist.docApi.applyUserActions([["UpdateRecord", state.tableId, state.record.id, payload]]);
+        logMessage(`✓ Processed ${newDestIds.length} new file${newDestIds.length === 1 ? "" : "s"}, kept ${existingDestIds.length} existing to row ${state.record.id}.`);
+      } finally {
+        setBusy(false);
+        renderState();
+      }
+    }
+
+    async function downloadAttachment(entry, token) {
+      const attachmentId = typeof entry === "object" && entry ? entry.id : entry;
+      if (!attachmentId) {
+        throw new Error("Attachment is missing an id.");
+      }
+      const name = entry && typeof entry === "object" && (entry.fileName || entry.filename || entry.name)
+        ? entry.fileName || entry.filename || entry.name
+        : `attachment-${attachmentId}`;
+      const formData = new FormData();
+      formData.append("attachment_id", attachmentId);
+      formData.append("token", token.token);
+      formData.append("base_url", token.baseUrl);
+      const response = await fetch(API_URL.replace("/watermark", "/download_from_grist"), {
+        method: "POST",
+        body: formData
+      });
+      if (!response.ok) {
+        throw new Error(`Failed to download attachment ${attachmentId} (${response.status})`);
+      }
+      const blob = await response.blob();
+      const contentType = response.headers.get("content-type") || "";
+      return {id: attachmentId, name, blob, contentType};
+    }
+
+    async function callWatermark(file) {
+      const formData = new FormData();
+      formData.append("file", file.blob, file.name);
+      formData.append("text", watermarkTextInput.value || "Confidential");
+      formData.append("text_size", watermarkSizeSelect.value || "3");
+      const response = await fetch(API_URL, {method: "POST", body: formData});
+      if (!response.ok) {
+        const text = await response.text();
+        throw new Error(`Watermark service error (${response.status}): ${text.slice(0, 120)}`);
+      }
+      const blob = await response.blob();
+      const contentType = response.headers.get("content-type") || file.contentType || "application/octet-stream";
+      const name = buildOutputName(file.name, contentType);
+      return {blob, name, contentType};
+    }
+
+    async function uploadAttachment(file, token) {
+      const formData = new FormData();
+      formData.append("file", file.blob, file.name);
+      formData.append("token", token.token);
+      formData.append("base_url", token.baseUrl);
+      const response = await fetch(API_URL.replace("/watermark", "/upload_to_grist"), {
+        method: "POST",
+        body: formData
+      });
+      if (!response.ok) {
+        const text = await response.text();
+        throw new Error(`Failed to upload ${file.name} (${response.status}): ${text.slice(0, 120)}`);
+      }
+      const result = await response.json();
+      return result.id;
+    }
+  </script>
+</body>
+</html>

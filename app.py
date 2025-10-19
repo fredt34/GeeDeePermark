@@ -3,6 +3,7 @@ from fastapi.responses import Response
 from io import BytesIO
 from PIL import Image, ImageDraw, ImageFont, ImageEnhance
 import fitz  # PyMuPDF
+import httpx
 
 DEFAULT_TEXT = "Confidential"
 DEFAULT_TEXT_SIZE = 3
@@ -114,3 +115,39 @@ async def watermark(
     else:
         out.save(buf, format="PNG", optimize=True)
         return Response(content=buf.getvalue(), media_type="image/png")
+
+
+@app.post("/download_from_grist")
+async def download_from_grist(
+    attachment_id: str = Form(...),
+    token: str = Form(...),
+    base_url: str = Form(...)
+):
+    url = f"{base_url}/attachments/{attachment_id}/download?auth={token}"
+    async with httpx.AsyncClient() as client:
+        response = await client.get(url)
+        if not response.is_success:
+            raise HTTPException(response.status_code, f"Failed to download from Grist: {response.text}")
+        return Response(content=response.content, media_type=response.headers.get("content-type", "application/octet-stream"))
+
+
+@app.post("/upload_to_grist")
+async def upload_to_grist(
+    file: UploadFile = File(...),
+    token: str = Form(...),
+    base_url: str = Form(...)
+):
+    # Adjust base_url for REST API
+    rest_base = base_url.replace('/o/docs/api', '/api')
+    url = f"{rest_base}/attachments?auth={token}"
+    files = {"upload": (file.filename, await file.read(), file.content_type)}
+    headers = {"X-Requested-With": "XMLHttpRequest"}
+    async with httpx.AsyncClient() as client:
+        response = await client.post(url, files=files, headers=headers)
+        if not response.is_success:
+            raise HTTPException(response.status_code, f"Failed to upload to Grist: {response.text}")
+        result = response.json()
+        attachment_id = result[0] if isinstance(result, list) else result.get("id") or result.get("attachmentId") or result.get("AttachmentId")
+        if not attachment_id:
+            raise HTTPException(500, "Upload did not return an attachment ID")
+        return {"id": attachment_id}

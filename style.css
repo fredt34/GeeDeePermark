@@ -16,7 +16,7 @@ html,body{height:100%; margin:0; font-family: Inter, system-ui, -apple-system, "
 .wrap{max-width:var(--max-width); margin:0 auto; padding:28px}
 
 /* Header */
-.site-header{padding:16px 0}
+.site-header{padding:12px 0}
 .site-header h1{margin:0; font-size:1.5rem; letter-spacing:-0.3px}
 .tagline{margin:6px 0 0; color:var(--muted); font-size:0.95rem}
 

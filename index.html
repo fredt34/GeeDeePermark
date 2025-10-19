@@ -1,0 +1,156 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>GeeDeePerMark — The Privacy Watermark (Docs)</title>
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <header class="site-header">
+    <div class="wrap">
+      <div style="display:flex;align-items:center;justify-content:space-between;">
+        <div style="display:flex;align-items:center;gap:1rem;">
+          <svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg" style="height:64px;width:64px;">
+            <path fill="#006D7D" d="M50 5l40 15v30c0 25-17 40-40 45-23-5-40-20-40-45V20z"/>
+            <g transform="rotate(-30 50 50)">
+              <path fill="none" stroke="#fff" stroke-width="2" d="M15 40l20 0M40 40l20 0M65 40l20 0" opacity=".4"/>
+              <path fill="none" stroke="#fff" stroke-width="2" d="M15 50l20 0M40 50l20 0M65 50l20 0" opacity=".4"/>
+              <path fill="none" stroke="#fff" stroke-width="2" d="M15 60l20 0M40 60l20 0M65 60l20 0" opacity=".4"/>
+            </g>
+          </svg>
+          <h1 style="display:inline-block; margin:0;">GeeDeePerMark</h1>
+        </div>
+        <!-- GitHub button added near the top -->
+        <a class="github-button" href="https://github.com/fredt34/GeeDeePermark" target="_blank" rel="noopener noreferrer" aria-label="View GeeDeePermark on GitHub" style="right:0;display:inline-block;vertical-align:middle;margin-left:1rem;text-decoration:none;color:inherit;/* text-align: right; */">
+          <!-- Octocat SVG icon -->
+          <svg height="20" width="20" viewBox="0 0 16 16" version="1.1" aria-hidden="true" style="vertical-align:middle; fill:currentColor;">
+            <path fill-rule="evenodd" d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38
+                    0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52
+                    -.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89
+                    -3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.01.08-2.11 0 0 .67-.21 2.2.82a7.62 7.62 0 012 0c1.53-1.04
+                    2.2-.82 2.2-.82.44 1.1.16 1.91.08 2.11.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54
+                    1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.013 8.013 0 0016 8c0-4.42-3.58-8-8-8z"></path>
+          </svg>
+          <span style="margin-left:0.4rem; vertical-align:middle; font-size:0.95rem;">View on GitHub</span>
+        </a>
+      </div>
+      <p class="tagline">The privacy watermark — control sensitive information.</p>
+    </div>
+  </header>
+
+  <main class="wrap">
+    <section class="card">
+      <h2>Why GeeDeePerMark?</h2>
+      <p><strong>Your Apps Should Never Store Unprotected ID Documents Again.</strong></p>
+      
+      <p>GeeDeePerMark protects sensitive documents by applying visible watermarks before storage or transmission. Whether you're handling ID cards, confidential reports, or audit materials, watermarking ensures:</p>
+      
+      <ul>
+        <li><strong>Deterrence</strong> — Visible watermarks discourage unauthorized sharing</li>
+        <li><strong>Privacy compliance</strong> — Mark sensitive data appropriately (GDPR, data classification)</li>
+        <li><strong>Audit trails</strong> — Custom text identifies document purpose and restrictions</li>
+      </ul>
+
+      <p><strong>Privacy-first design:</strong> All processing happens in-memory only — no files are ever stored on disk.</p>
+    </section>
+
+    <section class="card">
+      <h2>Use Cases</h2>
+      <ul>
+        <li><strong>HR departments</strong> — Watermark ID documents before storing in employee files</li>
+        <li><strong>Legal teams</strong> — Mark confidential documents for specific recipients</li>
+        <li><strong>Audit processes</strong> — Label documents "For Audit Only" or "Internal Use"</li>
+        <li><strong>Student verification</strong> — Protect ID copies used for enrollment</li>
+        <li><strong>Grist workflows</strong> — Auto-watermark attachments in your spreadsheet-database</li>
+      </ul>
+    </section>
+
+    <section class="card">
+      <h2>How It Works</h2>
+      <p>Three simple ways to use GeeDeePerMark:</p>
+      
+      <h3>1. REST API</h3>
+      <p>Send files via HTTP POST and receive watermarked results. Perfect for integrating into your applications.</p>
+      <pre class="example">
+curl -X POST "https://geedeepermark.cpvo.org/watermark" \
+  -F "file=@document.pdf" \
+  -F "text=Confidential" \
+  --output protected.pdf
+      </pre>
+      <p><a href="docs/API.md"><strong>→ Full API Documentation</strong></a></p>
+
+      <h3>2. Grist Custom Widget</h3>
+      <p>Automatically watermark document attachments in your Grist tables. Configure once, watermark automatically on every upload.</p>
+      <p><a href="grist-plugin/README.md"><strong>→ Grist Plugin Guide</strong></a></p>
+
+      <h3>3. Self-Hosted</h3>
+      <p>Install on your own infrastructure for complete control. Single Python file, minimal dependencies.</p>
+      <p><a href="docs/SETUP.md"><strong>→ Installation Guide</strong></a></p>
+    </section>
+
+    <section class="card">
+      <h2>Key Features</h2>
+      <ul>
+        <li><strong>In-memory processing</strong> — Files never touch disk</li>
+        <li><strong>No logging</strong> — No IP addresses, no file copies, no tracking</li>
+        <li><strong>Multiple formats</strong> — Images (JPEG, PNG, etc.) and PDFs</li>
+        <li><strong>Customizable</strong> — Choose your watermark text and size</li>
+        <li><strong>Tiled pattern</strong> — Watermark covers entire document, preventing cropping</li>
+        <li><strong>Open source</strong> — Single-file Python app, easy to audit</li>
+      </ul>
+    </section>
+
+    <section class="card">
+      <h2>Security & Privacy</h2>
+      <ul>
+        <li><strong>Ephemeral processing</strong> — Files exist only in RAM during watermarking</li>
+        <li><strong>No persistent storage</strong> — Original and watermarked files are never saved</li>
+        <li><strong>No tracking</strong> — We don't log IP addresses or file metadata</li>
+        <li><strong>Self-hostable</strong> — Run on your own servers for complete data sovereignty</li>
+        <li><strong>Use TLS</strong> — Always deploy behind a reverse proxy (Caddy/Nginx) with HTTPS</li>
+      </ul>
+      <p><em>Don't trust us? Great! Self-host it and audit the code yourself.</em></p>
+    </section>
+
+    <section class="card">
+      <h2>Available Service</h2>
+      <p>A public instance is available at: <a href="https://geedeepermark.cpvo.org/watermark" target="_blank" rel="noopener noreferrer"><strong>https://geedeepermark.cpvo.org/watermark</strong></a></p>
+      <p>Or install your own instance for maximum privacy and control.</p>
+    </section>
+
+    <section class="card">
+      <h2>Technical Resources</h2>
+      <ul>
+        <li><a href="/docs"><strong>API, Setup and Grist Docs</strong></a></li>
+        <li><a href="https://github.com/fredt34/GeeDeePermark"><strong>GitHub Repository</strong></a> — Source code and issues</li>
+      </ul>
+    </section>
+
+  </main>
+
+  <footer class="site-footer">
+    <div class="wrap" style="display:flex; align-items:center; justify-content:space-between; gap:1rem;">
+      <p style="margin:0;">GeeDeePerMark — Privacy watermark service, brought to you by FredT34, a seasoned DPO.</p>
+
+      <!-- Footer GitHub link -->
+      <a href="https://github.com/fredt34/GeeDeePermark"
+         target="_blank"
+         rel="noopener noreferrer"
+         aria-label="GeeDeePermark repository on GitHub"
+         style="display:inline-flex; align-items:center; gap:0.5rem; text-decoration:none; color:inherit; font-size:0.95rem;">
+        <svg height="18" width="18" viewBox="0 0 16 16" version="1.1" aria-hidden="true" style="fill:currentColor;">
+          <path fill-rule="evenodd"
+                d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38
+                   0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52
+                   -.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89
+                   -3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.01.08-2.11 0 0 .67-.21 2.2.82a7.62 7.62 0 012 0c1.53-1.04
+                   2.2-.82 2.2-.82.44 1.1.16 1.91.08 2.11.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54
+                   1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.013 8.013 0 0016 8c0-4.42-3.58-8-8-8z"/>
+        </svg>
+        <span>Repository on GitHub</span>
+      </a>
+    </div>
+  </footer>
+</body>
+</html>

@@ -1,6 +1,6 @@
 # GeeDeePerMark
 
-The privacy watermark.
+The privacy watermark. Available at https://geedeepermark.cpvo.org/
 
 ## Goal
 

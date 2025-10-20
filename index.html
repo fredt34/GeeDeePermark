@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>GeeDeePerMark — The Privacy Watermark (Docs)</title>
+  <title>GeeDeePerMark — The Privacy Watermark API</title>
   <link rel="stylesheet" href="style.css" />
 </head>
 <body>
@@ -35,16 +35,16 @@
           <span style="margin-left:0.4rem; vertical-align:middle; font-size:0.95rem;">View on GitHub</span>
         </a>
       </div>
-      <p class="tagline">The privacy watermark — control sensitive information.</p>
+      <p class="tagline">The privacy watermark — API to control sensitive information.</p>
     </div>
   </header>
 
   <main class="wrap">
     <section class="card">
       <h2>Why GeeDeePerMark?</h2>
-      <p><strong>Your Apps Should Never Store Unprotected ID Documents Again.</strong></p>
+      <p><strong>Your Apps Should Never Store Unprotected ID Documents Again. Use this API to watermark them.</strong></p>
       
-      <p>GeeDeePerMark protects sensitive documents by applying visible watermarks before storage or transmission. Whether you're handling ID cards, confidential reports, or audit materials, watermarking ensures:</p>
+      <p>GeeDeePerMark API protects sensitive documents by applying visible watermarks before storage or transmission. Whether you're handling ID cards, confidential reports, or audit materials, watermarking ensures:</p>
       
       <ul>
         <li><strong>Deterrence</strong> — Visible watermarks discourage unauthorized sharing</li>
@@ -70,7 +70,7 @@
       <h2>How It Works</h2>
       <p>Three simple ways to use GeeDeePerMark:</p>
       
-      <h3>1. REST API</h3>
+      <h3>1. Public REST API</h3>
       <p>Send files via HTTP POST and receive watermarked results. Perfect for integrating into your applications.</p>
       <pre class="example">
 curl -X POST "https://geedeepermark.cpvo.org/watermark" \
@@ -84,8 +84,8 @@ curl -X POST "https://geedeepermark.cpvo.org/watermark" \
       <p>Automatically watermark document attachments in your Grist tables. Configure once, watermark automatically on every upload.</p>
       <p><a href="grist-plugin/README.md"><strong>→ Grist Plugin Guide</strong></a></p>
 
-      <h3>3. Self-Hosted</h3>
-      <p>Install on your own infrastructure for complete control. Single Python file, minimal dependencies.</p>
+      <h3>3. Self-Hosted API</h3>
+      <p>Install on your own infrastructure for complete control. One single Python file, minimal dependencies.</p>
       <p><a href="docs/SETUP.md"><strong>→ Installation Guide</strong></a></p>
     </section>
 
@@ -110,7 +110,7 @@ curl -X POST "https://geedeepermark.cpvo.org/watermark" \
         <li><strong>Self-hostable</strong> — Run on your own servers for complete data sovereignty</li>
         <li><strong>Use TLS</strong> — Always deploy behind a reverse proxy (Caddy/Nginx) with HTTPS</li>
       </ul>
-      <p><em>Don't trust us? Great! Self-host it and audit the code yourself.</em></p>
+      <p><em>Don't trust me? You might be right! Self-host it and audit the code yourself.</em></p>
     </section>
 
     <section class="card">
@@ -131,7 +131,7 @@ curl -X POST "https://geedeepermark.cpvo.org/watermark" \
 
   <footer class="site-footer">
     <div class="wrap" style="display:flex; align-items:center; justify-content:space-between; gap:1rem;">
-      <p style="margin:0;">GeeDeePerMark — Privacy watermark service, brought to you by FredT34, a seasoned DPO.</p>
+      <p style="margin:0;">GeeDeePerMark — Privacy watermark API and public service, brought to you by FredT34, a seasoned DPO.</p>
 
       <!-- Footer GitHub link -->
       <a href="https://github.com/fredt34/GeeDeePermark"

@@ -1,1 +1,6 @@
-{"title":"Title of the config","details":"An explanation about the config called","url":"https://geedeepermark.cpvo.org/watermark","config":"0012-1234-..."}
+{
+  "title":"Title of the config",
+  "details":"An explanation about the config called",
+  "url":"https://geedeepermark.cpvo.org/watermark",
+  "config":"0012-1234-..."
+}

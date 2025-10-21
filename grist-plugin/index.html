@@ -452,7 +452,7 @@
       formData.append("attachment_id", attachmentId);
       formData.append("token", token.token);
       formData.append("base_url", token.baseUrl);
-      const response = await fetch(API_URL.replace("/watermark", "/download_from_grist"), {
+      const response = await fetch(API_URL.replace("/watermark", "/watermark_grist_download"), {
         method: "POST",
         body: formData
       });
@@ -485,7 +485,7 @@
       formData.append("file", file.blob, file.name);
       formData.append("token", token.token);
       formData.append("base_url", token.baseUrl);
-      const response = await fetch(API_URL.replace("/watermark", "/upload_to_grist"), {
+      const response = await fetch(API_URL.replace("/watermark", "/watermark_grist_upload"), {
         method: "POST",
         body: formData
       });

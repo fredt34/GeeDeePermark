@@ -5,8 +5,8 @@ Complete technical reference for all API endpoints.
 ## Table of Contents
 
 - [POST /watermark](#post-watermark) - Main watermarking endpoint
-- [POST /download_from_grist](#post-download_from_grist) - Grist attachment download proxy
-- [POST /upload_to_grist](#post-upload_to_grist) - Grist attachment upload proxy
+- [POST /watermark_grist_download](#post-watermark_grist_download) - Grist attachment download proxy
+- [POST /watermark_grist_upload](#post-watermark_grist_upload) - Grist attachment upload proxy
 
 ---
 
@@ -70,7 +70,7 @@ curl -X POST "https://geedeepermark.cpvo.org/watermark" \
 
 ---
 
-## POST /download_from_grist
+## POST /watermark_grist_download
 
 Grist integration endpoint that downloads an attachment from Grist via authenticated proxy. This endpoint bypasses CORS restrictions when the Grist custom widget needs to download attachments.
 
@@ -108,7 +108,7 @@ Grist integration endpoint that downloads an attachment from Grist via authentic
 
 ---
 
-## POST /upload_to_grist
+## POST /watermark_grist_upload
 
 Grist integration endpoint that uploads a file to Grist via authenticated proxy with required headers. This endpoint bypasses CORS restrictions and adds the `X-Requested-With: XMLHttpRequest` header required by Grist for unauthenticated requests.
 
@@ -201,11 +201,11 @@ See [SETUP.md](SETUP.md) for complete Caddy and Nginx configuration examples wit
 2. **Widget requests token:** `grist.docApi.getAccessToken({readOnly: false})`
 3. **Widget detects new source files** in attachments column
 4. **For each source file:**
-   - Call `POST /download_from_grist` with `attachment_id`, `token`, `base_url`
+   - Call `POST /watermark_grist_download` with `attachment_id`, `token`, `base_url`
    - Receive original file content
    - Call `POST /watermark` with file content, text, size
    - Receive watermarked file
-   - Call `POST /upload_to_grist` with watermarked file, `token`, `base_url`
+   - Call `POST /watermark_grist_upload` with watermarked file, `token`, `base_url`
    - Receive new attachment ID
    - Update destination column with new attachment ID
 5. **Result:** Watermarked files appear in destination column

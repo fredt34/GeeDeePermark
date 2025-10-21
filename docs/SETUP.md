@@ -65,10 +65,9 @@ geedeepermark.yourdomain.org {
     root * /var/www/GeeDeePermark2/docs
     
     # API endpoints go to Python backend
+    # All endpoints start with /watermark (including /watermark_grist_download and /watermark_grist_upload)
     @api {
         path /watermark*
-        path /download_from_grist*
-        path /upload_to_grist*
     }
     handle @api {
         reverse_proxy 127.0.0.1:8000
@@ -122,7 +121,8 @@ server {
     client_max_body_size 50M;
 
     # API endpoints proxy to Python backend
-    location ~ ^/(watermark|download_from_grist|upload_to_grist) {
+    # All endpoints start with /watermark (including /watermark_grist_download and /watermark_grist_upload)
+    location ~ ^/watermark {
         proxy_pass http://127.0.0.1:8000;
         proxy_set_header Host $host;
         proxy_set_header X-Real-IP $remote_addr;

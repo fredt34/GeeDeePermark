@@ -67,13 +67,13 @@ When `WatermarkAutoProcessRow=1` (or checkbox enabled):
 
 ### Authentication & CORS
 - Widget requests Grist access token via `grist.docApi.getAccessToken()`
-- Uses proxy endpoints `/download_from_grist` and `/upload_to_grist` to avoid CORS
+- Uses proxy endpoints `/watermark_grist_download` and `/watermark_grist_upload` to avoid CORS
 - Token passed as `?auth=` query parameter + `X-Requested-With: XMLHttpRequest` header
 
 ### Processing Flow
-1. Download source file from Grist via `/download_from_grist`
+1. Download source file from Grist via `/watermark_grist_download`
 2. Send to `/watermark` API with text and size parameters
-3. Upload watermarked result to Grist via `/upload_to_grist`
+3. Upload watermarked result to Grist via `/watermark_grist_upload`
 4. Update Dest column with new attachment IDs
 
 ## API Requirements
@@ -84,11 +84,11 @@ The GeeDeePermark API must provide these endpoints:
   - Input: `file`, `text`, `text_size`
   - Output: Watermarked PNG or PDF
 
-- `POST /download_from_grist` - Proxy download from Grist
+- `POST /watermark_grist_download` - Proxy download from Grist
   - Input: `attachment_id`, `token`, `base_url`
   - Output: File content
 
-- `POST /upload_to_grist` - Proxy upload to Grist
+- `POST /watermark_grist_upload` - Proxy upload to Grist
   - Input: `file`, `token`, `base_url`
   - Output: Grist upload response with attachment ID
 

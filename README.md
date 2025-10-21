@@ -19,8 +19,8 @@ Provide a simple API to have images watermarked with a given text - So Your Apps
 Three main endpoints are available:
 
 - **POST /watermark** — Main watermarking endpoint (images and PDFs)
-- **POST /download_from_grist** — Grist attachment download proxy (bypasses CORS)
-- **POST /upload_to_grist** — Grist attachment upload proxy (bypasses CORS)
+- **POST /watermark_grist_download** — Grist attachment download proxy (bypasses CORS)
+- **POST /watermark_grist_upload** — Grist attachment upload proxy (bypasses CORS)
 
 **[→ Complete API Documentation](docs/API.md)** — Detailed technical reference with examples, parameters, responses, and implementation details.
 
@@ -61,7 +61,7 @@ Python. Has lots of libraries, secure and easy to install & read. Shamelessly vi
 
 Program was designed be as short as possible - ideally, only 1 single file, no compile, in order to be extremely easy to install and run. No Java.
 
-**Note on Grist integration**: The API includes proxy endpoints (`/download_from_grist` and `/upload_to_grist`) using `httpx` to bypass CORS restrictions when the Grist custom widget uploads attachments. Grist requires either `Content-Type: application/json` or `X-Requested-With: XMLHttpRequest` header for unauthenticated requests, which browser fetch() cannot set from widgets, hence the server-side proxy solution.
+**Note on Grist integration**: The API includes proxy endpoints (`/watermark_grist_download` and `/watermark_grist_upload`) using `httpx` to bypass CORS restrictions when the Grist custom widget uploads attachments. Grist requires either `Content-Type: application/json` or `X-Requested-With: XMLHttpRequest` header for unauthenticated requests, which browser fetch() cannot set from widgets, hence the server-side proxy solution.
 
 ## Available on
 

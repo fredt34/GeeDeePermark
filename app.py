@@ -9,6 +9,14 @@ import json
 import re
 import os
 
+# API Endpoints:
+# - POST /watermark - Main watermarking endpoint
+# - POST /watermark_grist_download - Grist attachment download proxy
+# - POST /watermark_grist_upload - Grist attachment upload proxy
+#
+# Note: All endpoints share the "/watermark" prefix for simplified reverse proxy configuration.
+# Configure your reverse proxy with: path /watermark* (Caddy) or location ~ ^/watermark (Nginx)
+
 # Deployment constant: 0 = unlocked, 1 = locked, 2 = mixed
 LOCKED = 2
 
@@ -277,7 +285,7 @@ async def watermark(
         return Response(content=buf.getvalue(), media_type="image/png")
 
 
-@app.post("/download_from_grist")
+@app.post("/watermark_grist_download")
 async def download_from_grist(
     attachment_id: str = Form(...),
     token: str = Form(...),
@@ -291,7 +299,7 @@ async def download_from_grist(
         return Response(content=response.content, media_type=response.headers.get("content-type", "application/octet-stream"))
 
 
-@app.post("/upload_to_grist")
+@app.post("/watermark_grist_upload")
 async def upload_to_grist(
     file: UploadFile = File(...),
     token: str = Form(...),

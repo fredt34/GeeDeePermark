@@ -1,9 +1,16 @@
 from fastapi import FastAPI, UploadFile, File, Form, HTTPException
 from fastapi.responses import Response
 from io import BytesIO
+from pathlib import Path
 from PIL import Image, ImageDraw, ImageFont, ImageEnhance
 import fitz  # PyMuPDF
 import httpx
+import json
+import re
+import os
+
+# Deployment constant: 0 = unlocked, 1 = locked
+LOCKED = 0
 
 DEFAULT_TEXT = "Confidential"
 DEFAULT_TEXT_SIZE = 3
@@ -11,6 +18,67 @@ DEFAULT_TRADEMARK = "Created with GeeDeePermark - https://geedeepermark.cpvo.org
 DEFAULT_TRADEMARK_SIZE = 2
 
 app = FastAPI()
+
+def load_config_from_uuid(uuid: str) -> dict:
+    """
+    Load watermark configuration from a UUID-based JSON file.
+    
+    Security features:
+    - Validates UUID format (only hex digits and hyphens)
+    - Prevents directory traversal using Path.resolve()
+    - Rejects files larger than 1 MB
+    - Returns 404 if file not found
+    
+    Args:
+        uuid: UUID string (e.g., "00000000-0000-0000-0000-000000000000")
+    
+    Returns:
+        dict with 'text' and 'text_size' keys (with defaults if missing)
+    
+    Raises:
+        HTTPException: 400 for invalid UUID, 404 for missing file, 413 for oversized file
+    """
+    # Validate UUID format: only hex digits and hyphens
+    if not re.match(r'^[0-9a-fA-F-]+$', uuid):
+        raise HTTPException(400, "Invalid UUID format")
+    
+    # Construct safe path and prevent directory traversal
+    configs_dir = Path(__file__).parent / "configs"
+    config_file = configs_dir / f"{uuid}.json"
+    
+    try:
+        # Resolve to absolute path and verify it's inside configs/
+        resolved_path = config_file.resolve()
+        resolved_configs_dir = configs_dir.resolve()
+        
+        if not str(resolved_path).startswith(str(resolved_configs_dir)):
+            raise HTTPException(400, "Invalid UUID: directory traversal detected")
+    except Exception:
+        raise HTTPException(400, "Invalid UUID path")
+    
+    # Check if file exists
+    if not resolved_path.exists():
+        raise HTTPException(404, f"Configuration file not found for UUID: {uuid}")
+    
+    # Check file size (max 1 MB)
+    file_size = resolved_path.stat().st_size
+    if file_size > 1_000_000:
+        raise HTTPException(413, "Configuration file too large (max 1 MB)")
+    
+    # Load and parse JSON
+    try:
+        with open(resolved_path, 'r', encoding='utf-8') as f:
+            config = json.load(f)
+    except json.JSONDecodeError:
+        raise HTTPException(400, f"Invalid JSON in configuration file: {uuid}")
+    except Exception as e:
+        raise HTTPException(500, f"Error reading configuration file: {e}")
+    
+    # Return config with defaults for missing keys
+    return {
+        'text': config.get('text', DEFAULT_TEXT),
+        'text_size': config.get('text_size', DEFAULT_TEXT_SIZE)
+    }
 
 def load_font(px):
     # Try common system font; fall back to Pillow default
@@ -40,8 +108,8 @@ def draw_watermark(img: Image.Image, text: str, size: int) -> Image.Image:
     except AttributeError:
         tw, th = draw.textsize(text, font=font)
 
-    step_x = int(tw * 1.15) # inter words
-    step_y = int(th * 2.8) # inter lines
+    step_x = int(tw * 1.15)  # inter words
+    step_y = int(th * 2.8)  # inter lines
     for y in range(0, tile_h, step_y):
         for x in range(0, tile_w, step_x):
             draw.text((x, y), text, font=font, fill=(128, 128, 128, 128))
@@ -70,7 +138,7 @@ def draw_watermark(img: Image.Image, text: str, size: int) -> Image.Image:
     # Add trademark at bottom right
     x_bottom_right = max(0, w - tw_trademark - 10)
     y_bottom_right = max(0, h - th_trademark - 10)
-    draw_out.text((x_bottom_right, y_bottom_right), DEFAULT_TRADEMARK, font=trademark_font, fill=(128,128,128,128))
+    draw_out.text((x_bottom_right, y_bottom_right), DEFAULT_TRADEMARK, font=trademark_font, fill=(128, 128, 128, 128))
 
     return out.convert("RGB")
 
@@ -91,9 +159,70 @@ def open_as_image(data: bytes, content_type: str) -> Image.Image:
 @app.post("/watermark")
 async def watermark(
     file: UploadFile = File(...),
-    text: str = Form(DEFAULT_TEXT),      # default text
-    text_size: int = Form(DEFAULT_TEXT_SIZE, ge=1, le=4),  # default = 3
+    text: str = Form(None),
+    text_size: int = Form(None, ge=1, le=4),
+    uuid: str = Form(None),
 ):
+    """
+    Apply watermark to an uploaded image or PDF file.
+    
+    **Operating Modes (controlled by LOCKED constant):**
+    
+    **LOCKED = 0 (Unlocked Mode):**
+    - Parameters: file (required), text (optional), text_size (optional)
+    - The 'uuid' parameter is REJECTED (returns 400)
+    - Users can specify custom watermark text and size
+    - Example: POST with file=@doc.pdf, text="Custom", text_size=3
+    
+    **LOCKED = 1 (Locked Mode):**
+    - Parameters: file (required), uuid (required)
+    - The 'text' and 'text_size' parameters are REJECTED (returns 400)
+    - Watermark configuration is loaded from configs/{uuid}.json
+    - Example: POST with file=@doc.pdf, uuid="00000000-0000-0000-0000-000000000000"
+    
+    Args:
+        file: Image (JPEG, PNG, etc.) or PDF file to watermark
+        text: Watermark text (unlocked mode only)
+        text_size: Font size 1-4 (unlocked mode only)
+        uuid: Configuration UUID (locked mode only)
+    
+    Returns:
+        Watermarked file (PNG for images, PDF for PDFs)
+    
+    Raises:
+        HTTPException: 400 for invalid parameters or unsupported files
+    """
+    # Mode-based parameter validation
+    if LOCKED == 0:
+        # Unlocked mode: reject uuid, allow text/text_size
+        if uuid is not None:
+            raise HTTPException(400, "Parameter 'uuid' not allowed in unlocked mode")
+        
+        # Use provided values or defaults
+        watermark_text = text if text is not None else DEFAULT_TEXT
+        watermark_size = text_size if text_size is not None else DEFAULT_TEXT_SIZE
+    
+    elif LOCKED == 1:
+        # Locked mode: require uuid, reject text/text_size
+        if text is not None or text_size is not None:
+            raise HTTPException(400, "Parameters 'text' and 'text_size' not allowed in locked mode")
+        
+        if uuid is None:
+            raise HTTPException(400, "Parameter 'uuid' is required in locked mode")
+        
+        # Load configuration from UUID file
+        config = load_config_from_uuid(uuid)
+        watermark_text = config['text']
+        watermark_size = config['text_size']
+    
+    else:
+        raise HTTPException(500, f"Invalid LOCKED mode value: {LOCKED}")
+    
+    # Validate text_size range
+    if not (1 <= watermark_size <= 4):
+        raise HTTPException(400, "text_size must be between 1 and 4")
+    
+    # Process the file
     blob = await file.read()
     try:
         img = open_as_image(blob, file.content_type or "")
@@ -101,7 +230,7 @@ async def watermark(
         raise HTTPException(400, "Unsupported file. Provide an image or a PDF.")
 
     try:
-        out = draw_watermark(img, text, text_size)
+        out = draw_watermark(img, watermark_text, watermark_size)
     except Exception as e:
         import traceback
         raise HTTPException(500, f"Watermark error: {e}\n{traceback.format_exc()}")
@@ -116,7 +245,6 @@ async def watermark(
         out.save(buf, format="PNG", optimize=True)
         return Response(content=buf.getvalue(), media_type="image/png")
 
-
 @app.post("/download_from_grist")
 async def download_from_grist(
     attachment_id: str = Form(...),
@@ -129,7 +257,6 @@ async def download_from_grist(
         if not response.is_success:
             raise HTTPException(response.status_code, f"Failed to download from Grist: {response.text}")
         return Response(content=response.content, media_type=response.headers.get("content-type", "application/octet-stream"))
-
 
 @app.post("/upload_to_grist")
 async def upload_to_grist(

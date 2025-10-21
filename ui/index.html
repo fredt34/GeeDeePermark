@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>File Upload Interface</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div class="upload-container">
+        <h1>Upload Your Files</h1>
+        <div class="upload-area" id="uploadArea">
+            <p>Drag and drop files here, or click to select files</p>
+            <input type="file" id="fileInput" multiple>
+        </div>
+        <div class="status" id="status"></div>
+    </div>
+    <script>
+        const uploadArea = document.getElementById('uploadArea');
+        const fileInput = document.getElementById('fileInput');
+        const status = document.getElementById('status');
+
+        uploadArea.addEventListener('click', () => fileInput.click());
+
+        fileInput.addEventListener('change', handleFiles);
+        uploadArea.addEventListener('dragover', (e) => e.preventDefault());
+        uploadArea.addEventListener('drop', (e) => {
+            e.preventDefault();
+            handleFiles(e.dataTransfer.files);
+        });
+
+        function handleFiles(files) {
+            Array.from(files).forEach(uploadFile);
+        }
+
+        function uploadFile(file) {
+            const xhr = new XMLHttpRequest();
+            const formData = new FormData();
+            formData.append('file', file);
+
+            xhr.open('POST', 'https://geedeepermark.cpvo.org/watermark', true);
+            xhr.onload = function () {
+                if (xhr.status === 200) {
+                    const downloadLink = document.createElement('a');
+                    downloadLink.href = URL.createObjectURL(new Blob([xhr.response]));
+                    downloadLink.download = `watermarked-${file.name}`;
+                    downloadLink.innerText = 'Download Watermarked File';
+                    status.innerHTML = '';
+                    status.appendChild(downloadLink);
+                } else {
+                    status.textContent = 'Upload failed';
+                }
+            };
+            xhr.send(formData);
+            status.textContent = 'Uploading...';
+        }
+    </script>
+</body>
+</html>

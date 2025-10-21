@@ -1,3 +1,33 @@
+:root {
+  /* Primary colors */
+  --color-primary: #667eea;
+  --color-primary: rgb(113, 60, 92);
+  --color-primary-dark: #764ba2;
+  --color-primary-dark: rgb(180, 18, 34);
+  
+  /* Text colors */
+  --color-text-dark: #333;
+  --color-text-medium: #666;
+  
+  /* Background colors */
+  --color-bg-white: white;
+  --color-bg-light: #f8f9ff;
+  --color-bg-light-hover: #f0f1ff;
+  --color-bg-light-active: #e8e9ff;
+  
+  /* Status colors */
+  --color-success-bg: #d4edda;
+  --color-success-text: #155724;
+  --color-error-bg: #f8d7da;
+  --color-error-text: #721c24;
+  --color-loading-bg: #d1ecf1;
+  --color-loading-text: #0c5460;
+  
+  /* Shadow colors */
+  --shadow-light: rgba(0, 0, 0, 0.1);
+  --spinner-border: rgba(0, 0, 0, 0.1);
+}
+
 * {
   margin: 0;
   padding: 0;
@@ -6,7 +36,12 @@
 
 body {
   font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  background: linear-gradient(135deg, var(--color-primary) 0%, var(--color-primary-dark) 100%);
+  background-image: url('background.jpg');
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
+  background-attachment: fixed;
   min-height: 100vh;
   display: flex;
   justify-content: center;
@@ -15,45 +50,75 @@ body {
 }
 
 .container {
-  background: white;
+  background: var(--color-bg-white);
   border-radius: 12px;
-  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.1);
+  box-shadow: 0 10px 40px var(--shadow-light);
   padding: 40px;
   max-width: 600px;
   width: 100%;
+  position: relative;
+}
+
+.language-switcher {
+  position: absolute;
+  top: 20px;
+  right: 20px;
+  display: flex;
+  gap: 5px;
+}
+
+.lang-btn {
+  background: var(--color-bg-light);
+  border: 2px solid var(--color-primary);
+  color: var(--color-primary);
+  padding: 6px 12px;
+  border-radius: 6px;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.lang-btn:hover {
+  background: var(--color-bg-light-hover);
+}
+
+.lang-btn.active {
+  background: var(--color-primary);
+  color: var(--color-bg-white);
 }
 
 h1 {
-  color: #333;
+  color: var(--color-text-dark);
   margin-bottom: 10px;
   font-size: 28px;
 }
 
 .details {
-  color: #666;
+  color: var(--color-text-medium);
   margin-bottom: 30px;
   font-size: 14px;
 }
 
 .upload-area {
-  border: 2px dashed #667eea;
+  border: 2px dashed var(--color-primary);
   border-radius: 8px;
   padding: 40px;
   text-align: center;
-  background: #f8f9ff;
+  background: var(--color-bg-light);
   cursor: pointer;
   transition: all 0.3s ease;
   margin-bottom: 20px;
 }
 
 .upload-area:hover {
-  border-color: #764ba2;
-  background: #f0f1ff;
+  border-color: var(--color-primary-dark);
+  background: var(--color-bg-light-hover);
 }
 
 .upload-area.dragover {
-  border-color: #764ba2;
-  background: #e8e9ff;
+  border-color: var(--color-primary-dark);
+  background: var(--color-bg-light-active);
 }
 
 .upload-icon {
@@ -68,7 +133,7 @@ h1 {
 .file-info {
   margin: 20px 0;
   padding: 15px;
-  background: #f8f9ff;
+  background: var(--color-bg-light);
   border-radius: 6px;
   display: none;
 }
@@ -79,18 +144,18 @@ h1 {
 
 .file-name {
   font-weight: 600;
-  color: #333;
+  color: var(--color-text-dark);
   margin-bottom: 5px;
 }
 
 .file-size {
-  color: #666;
+  color: var(--color-text-medium);
   font-size: 14px;
 }
 
 .btn {
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-  color: white;
+  background: linear-gradient(135deg, var(--color-primary) 0%, var(--color-primary-dark) 100%);
+  color: var(--color-bg-white);
   border: none;
   padding: 12px 30px;
   border-radius: 6px;
@@ -124,27 +189,27 @@ h1 {
 }
 
 .status.success {
-  background: #d4edda;
-  color: #155724;
+  background: var(--color-success-bg);
+  color: var(--color-success-text);
 }
 
 .status.error {
-  background: #f8d7da;
-  color: #721c24;
+  background: var(--color-error-bg);
+  color: var(--color-error-text);
 }
 
 .status.loading {
-  background: #d1ecf1;
-  color: #0c5460;
+  background: var(--color-loading-bg);
+  color: var(--color-loading-text);
 }
 
 .spinner {
   display: inline-block;
   width: 16px;
   height: 16px;
-  border: 3px solid rgba(0, 0, 0, 0.1);
+  border: 3px solid var(--spinner-border);
   border-radius: 50%;
-  border-top-color: #0c5460;
+  border-top-color: var(--color-loading-text);
   animation: spin 1s ease-in-out infinite;
 }
 
@@ -155,7 +220,7 @@ h1 {
 .download-link {
   display: inline-block;
   margin-top: 10px;
-  color: #667eea;
+  color: var(--color-primary);
   text-decoration: none;
   font-weight: 600;
 }

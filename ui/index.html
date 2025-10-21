@@ -8,13 +8,17 @@
 </head>
 <body>
     <div class="container">
+        <div class="language-switcher">
+            <button class="lang-btn active" data-lang="fr">FR</button>
+            <button class="lang-btn" data-lang="en">EN</button>
+        </div>
         <h1 id="app-title">GeeDeePermark Watermarking</h1>
         <p class="details" id="app-details">Upload your file to add a watermark</p>
         
         <div class="upload-area" id="uploadArea">
             <div class="upload-icon">📁</div>
-            <p>Click to select a file or drag and drop</p>
-            <p style="font-size: 14px; color: #666; margin-top: 10px;">Supports images and PDF files</p>
+            <p id="upload-text">Click to select a file or drag and drop</p>
+            <p style="font-size: 14px; color: #666; margin-top: 10px;" id="upload-formats">Supports images and PDF files</p>
             <input type="file" id="fileInput" class="file-input" accept="image/*,.pdf">
         </div>
 
@@ -31,17 +35,124 @@
     <script>
         let selectedFile = null;
         let config = {};
+        let translations = {};
+        let currentLang = 'fr'; // Default language
+
+        // Load translations
+        async function loadTranslations(lang) {
+            try {
+                const response = await fetch(`${lang}.json`);
+                if (!response.ok) {
+                    throw new Error(`Translation file not found: ${lang}.json`);
+                }
+                translations = await response.json();
+                currentLang = lang;
+                updateUILanguage();
+                
+                // Update active button
+                document.querySelectorAll('.lang-btn').forEach(btn => {
+                    btn.classList.toggle('active', btn.dataset.lang === lang);
+                });
+                
+                // Save preference
+                localStorage.setItem('preferredLang', lang);
+            } catch (error) {
+                console.error('Error loading translations:', error);
+            }
+        }
+
+        // Update UI with current language
+        function updateUILanguage() {
+            // Update static UI elements
+            document.getElementById('upload-text').textContent = translations.upload_subtitle || 'Click to select a file';
+            document.getElementById('upload-formats').textContent = translations.upload_formats || 'Supports images and PDF files';
+            document.getElementById('uploadBtn').textContent = translations.btn_upload || 'Upload and Watermark';
+            
+            // Update config-based elements
+            updateConfigTexts();
+        }
+
+        // Update texts from config (with language support)
+        function updateConfigTexts() {
+            const titleKey = `title_${currentLang}`;
+            const detailsKey = `details_${currentLang}`;
+            
+            // Use language-specific keys if available, fallback to generic keys
+            const title = config[titleKey] || config.title || translations.default_title;
+            const details = config[detailsKey] || config.details || translations.default_details;
+            
+            document.getElementById('app-title').textContent = title;
+            document.getElementById('app-details').innerHTML = details;
+        }
+
+        // Detect department from URL query parameter
+        function detectDepartment() {
+            const urlParams = new URLSearchParams(window.location.search);
+            return urlParams.get('dept') || urlParams.get('department');
+        }
 
         // Load configuration
         async function loadConfig() {
+            const dept = detectDepartment();
+            let configPath = 'parameters.json';
+            let usingDefault = false;
+            
+            // If department detected, try to load from department subfolder
+            if (dept) {
+                configPath = `${dept}/parameters.json`;
+            }
+            
+            console.log(`Loading config from: ${configPath}`);
+            
             try {
-                const response = await fetch('parameters.json');
+                const response = await fetch(configPath);
+                
+                if (!response.ok) {
+                    throw new Error(`Config not found: ${configPath}`);
+                }
+                
                 config = await response.json();
-                document.getElementById('app-title').textContent = config.title || 'GeeDeePermark Watermarking';
-                document.getElementById('app-details').textContent = config.details || 'Upload your file to add a watermark';
             } catch (error) {
                 console.error('Error loading config:', error);
-                showStatus('Error loading configuration', 'error');
+                
+                // If department-specific config failed, try default
+                if (dept) {
+                    console.log('Falling back to default configuration...');
+                    try {
+                        const defaultResponse = await fetch('parameters.json');
+                        if (defaultResponse.ok) {
+                            config = await defaultResponse.json();
+                            usingDefault = true;
+                            const msg = translations.dept_not_found ? 
+                                translations.dept_not_found.replace('{dept}', dept) : 
+                                `Department "${dept}" not found. Using default configuration.`;
+                            showStatus(`⚠️ ${msg}`, 'loading');
+                        } else {
+                            throw new Error('Default configuration not found');
+                        }
+                    } catch (defaultError) {
+                        console.error('Error loading default config:', defaultError);
+                        showStatus(`❌ ${translations.config_error || 'Error: No configuration available'}`, 'error');
+                        return;
+                    }
+                } else {
+                    showStatus(`❌ ${translations.status_error || 'Error'}: ${error.message}`, 'error');
+                    return;
+                }
+            }
+            
+            // Update UI with loaded config
+            try {
+                updateConfigTexts();
+                
+                // Clear the warning message after a delay if using default
+                if (usingDefault) {
+                    setTimeout(() => {
+                        status.classList.remove('show');
+                    }, 5000);
+                }
+            } catch (error) {
+                console.error('Error updating UI:', error);
             }
         }
 
@@ -115,12 +226,12 @@
 
             uploadBtn.disabled = true;
             showStatus('Uploading and watermarking... ', 'loading');
-            status.innerHTML = '<span class="spinner"></span> Uploading and watermarking...';
+            status.innerHTML = `<span class="spinner"></span> ${translations.status_uploading || 'Uploading and watermarking...'}`;
 
             try {
                 const formData = new FormData();
                 formData.append('file', selectedFile);
-                formData.append('config', configId);
+                formData.append('uuid', configId);
 
                 const response = await fetch(apiUrl, {
                     method: 'POST',
@@ -140,9 +251,9 @@
                 downloadLink.href = url;
                 downloadLink.download = `watermarked_${selectedFile.name}`;
                 downloadLink.className = 'download-link';
-                downloadLink.textContent = '📥 Download Watermarked File';
+                downloadLink.textContent = translations.download_link || '📥 Download Watermarked File';
                 
-                status.innerHTML = '✅ Watermarking successful! ';
+                status.innerHTML = `✅ ${translations.status_success || 'Watermarking successful!'} `;
                 status.appendChild(downloadLink);
                 status.className = 'status show success';
 
@@ -151,14 +262,24 @@
 
             } catch (error) {
                 console.error('Upload error:', error);
-                showStatus(`❌ Error: ${error.message}`, 'error');
+                showStatus(`❌ ${translations.status_error || 'Error'}: ${error.message}`, 'error');
             } finally {
                 uploadBtn.disabled = false;
             }
         }
 
-        // Initialize
-        loadConfig();
+        // Language switcher event listeners
+        document.querySelectorAll('.lang-btn').forEach(btn => {
+            btn.addEventListener('click', () => {
+                loadTranslations(btn.dataset.lang);
+            });
+        });
+
+        // Initialize - Load saved language preference or default
+        const savedLang = localStorage.getItem('preferredLang') || 'fr';
+        loadTranslations(savedLang).then(() => {
+            loadConfig();
+        });
     </script>
 </body>
 </html>

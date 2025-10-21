@@ -1,0 +1,14 @@
+{
+  "upload_title": "Select a file",
+  "upload_subtitle": "Click to select a file or drag and drop",
+  "upload_formats": "Supports images and PDF files",
+  "btn_upload": "Upload and Watermark",
+  "status_uploading": "Uploading and watermarking...",
+  "status_success": "Watermarking successful!",
+  "status_error": "Error",
+  "download_link": "📥 Download Watermarked File",
+  "dept_not_found": "Department \"{dept}\" not found. Using default configuration.",
+  "config_error": "Error: No configuration available",
+  "default_title": "GeeDeePermark Watermarking",
+  "default_details": "Upload your file to add a watermark"
+}

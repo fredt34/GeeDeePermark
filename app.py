@@ -10,7 +10,7 @@ import re
 import os
 
 # Deployment constant: 0 = unlocked, 1 = locked, 2 = mixed
-LOCKED = 0
+LOCKED = 2
 
 DEFAULT_TEXT = "Confidential"
 DEFAULT_TEXT_SIZE = 3

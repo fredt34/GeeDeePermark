@@ -1,0 +1,14 @@
+{
+  "upload_title": "Sélectionner un fichier",
+  "upload_subtitle": "Cliquez pour sélectionner un fichier ou glissez-déposez",
+  "upload_formats": "Supporte les images et fichiers PDF",
+  "btn_upload": "Envoyer et Marquer",
+  "status_uploading": "Envoi et marquage en cours...",
+  "status_success": "Marquage réussi !",
+  "status_error": "Erreur",
+  "download_link": "📥 Télécharger le Fichier Marqué",
+  "dept_not_found": "Département \"{dept}\" introuvable. Utilisation de la configuration par défaut.",
+  "config_error": "Erreur : Aucune configuration disponible",
+  "default_title": "GeeDeePermark Watermarking",
+  "default_details": "Téléchargez votre fichier pour ajouter un filigrane"
+}

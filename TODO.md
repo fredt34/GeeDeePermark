@@ -6,6 +6,7 @@
     - [ ] LOCKED
     - [ ] New config values : watermark_color (128, 128, 128, 128), max_upload_size, max_image_size, color_mode ("color", "grey", "bw"), pdf_pages_max - default values, can be changed by uuid configs
     - [ ] Check if values are reloaded - or do we have to restart the service?
+- [ ] use real uuids
 - [ ] extend /ui/index.html: ?unlimited: allows to define all parameters in ui (if Locked = unlocked or mixed)
 - Log system:
   - [x] think about a self hosted plausible + PostgreSQL + dash - https://chatgpt.com/share/68f8ad39-701c-800c-a130-23a0e4a7fa3d

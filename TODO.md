@@ -1,0 +1,10 @@
+- [] app.py:
+  - manage all pdf pages (ID scans can be 2-sided)
+    - new param: pdf_pages_max
+  - set values as params: watermark_inter_words, watermark_inter_lines, watermark_rotation
+  - move some config to /main_config.json file
+    - [] LOCKED
+    - [] New config values : watermark_color (128, 128, 128, 128), max_upload_size, max_image_size, color_mode ("color", "grey", "bw"), pdf_pages_max - default values, can be changed by uuid configs
+    - [] Check if values are reloaded - or do we have to restart the service?
+- [] extend /ui/index.html: ?unlimited: allows to define all parameters in ui (if Locked = unlocked or mixed)
+- [] think about a Log system

@@ -63,6 +63,32 @@
         <li>Incremental watermarking</li>
         <li>Troubleshooting</li>
       </ul>
+
+      <h3><a href="../ui/index.html">Web User Interface</a></h3>
+      <p>Standalone web interface for file watermarking with department-specific configurations.</p>
+      <ul>
+        <li><strong>Main interface:</strong> <a href="../ui/index.html">Default configuration</a></li>
+        <li><strong>Department-specific:</strong> <a href="../ui/?dept=RH">HR Department</a> | <a href="../ui/?dept=IT">IT Department</a></li>
+        <li><strong>Features:</strong>
+          <ul>
+            <li>Drag-and-drop file upload</li>
+            <li>Multi-language support (FR/EN)</li>
+            <li>Department-specific watermarks via UUID configs</li>
+            <li>Customizable branding per department</li>
+          </ul>
+        </li>
+        <li><strong>Configuration:</strong> Use <code>?dept=DEPT_NAME</code> parameter to load <code>ui/DEPT_NAME/parameters.json</code></li>
+        <li><strong>Example parameters.json:</strong>
+          <pre>{
+  "title_fr": "Chargement RH",
+  "title_en": "HR Upload",
+  "details_fr": "Document protégé...",
+  "details_en": "Protected document...",
+  "url": "http://geedee/watermark",
+  "config": "00000000-0000-0000-0000-00000000000A"
+}</pre>
+        </li>
+      </ul>
     </section>
 
     <section class="card">

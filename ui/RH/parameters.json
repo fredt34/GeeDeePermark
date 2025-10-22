@@ -3,6 +3,6 @@
   "title_en": "HR Upload MaSociété",
   "details_fr": "Le document va être marqué pour les RH. Merci de leur adresser le document généré - il est désormais protégé.<br>Pour plus d'informations, contactez le DPO à dpo@masociete.fr.",
   "details_en": "The document will be watermarked for HR. Please forward the generated document - it is now protected.<br>For more information, contact the DPO at dpo@masociete.fr.",
-  "url": "http://geedee/watermark",
+  "url": "https://geedeepermark.cpvo.org/watermark",
   "config": "00000000-0000-0000-0000-00000000000A"
 }
